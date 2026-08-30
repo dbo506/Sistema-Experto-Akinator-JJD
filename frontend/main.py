@@ -11,5 +11,5 @@ resultado = subprocess.run(
     check=True
 )
 
-print("Respuest recibida desde Scheme:")
+print("Respuesta recibida desde Scheme:")
 print(resultado.stdout)
