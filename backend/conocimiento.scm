@@ -1,14 +1,14 @@
 #lang racket
 
-;; Base de conocimiento del Akinator de futbolistas costarricenses.
-;; Fecha de corte académica: 31 de agosto de 2026.
-
+; Estas funciones y variables podrán utilizarse
+; desde los demás archivos del proyecto.
 (provide conocimiento
          caracteristicas-disponibles
          obtener-entidades
          obtener-caracteristicas
          buscar-valor)
 
+; Lista de las 20 características que utilizará el sistema.
 (define caracteristicas-disponibles
   '(portero
     defensor
@@ -31,11 +31,18 @@
     mundial-2002
     mundial-2006))
 
-;; Convierte #t y #f en los símbolos si y no.
+; Convierte los valores booleanos #t y #f
+; en los símbolos si y no.
 (define (si-no valor)
-  (if valor 'si 'no))
+  (cond
+    [valor
+     'si]
 
-;; Crea automáticamente las 20 características de un jugador.
+    [else
+     'no]))
+
+; Crea automáticamente las 20 características
+; correspondientes a cada futbolista.
 (define (crear-jugador nombre
                        posicion
                        retirado
@@ -116,28 +123,30 @@
         (list 'mundial-2006
               (si-no mundial-2006))))
 
-;; Orden de los valores después de la posición:
-;;
-;; retirado
-;; mundialista
-;; mundial-2014
-;; más de 50 partidos con la selección
-;; más de 100 partidos con la selección
-;; capitán
-;; Europa
-;; MLS
-;; México
-;; Saprissa
-;; Alajuelense
-;; Herediano
-;; Cartaginés
-;; anotó con la selección
-;; Mundial 2002
-;; Mundial 2006
+; Orden de los valores después de la posición:
+;
+; 1. Retirado.
+; 2. Mundialista.
+; 3. Participó en el Mundial 2014.
+; 4. Más de 50 partidos con la selección.
+; 5. Más de 100 partidos con la selección.
+; 6. Capitán de la selección.
+; 7. Jugó en Europa.
+; 8. Jugó en la MLS.
+; 9. Jugó en México.
+; 10. Jugó en Saprissa.
+; 11. Jugó en Alajuelense.
+; 12. Jugó en Herediano.
+; 13. Jugó en Cartaginés.
+; 14. Anotó con la selección.
+; 15. Participó en el Mundial 2002.
+; 16. Participó en el Mundial 2006.
 
+; Base de conocimiento conformada por 30 futbolistas.
 (define conocimiento
   (list
 
+   ; 1. Keylor Navas
    (crear-jugador
     'keylor-navas
     'portero
@@ -146,6 +155,7 @@
     #t #f #f #f
     #f #f #f)
 
+   ; 2. Bryan Ruiz
    (crear-jugador
     'bryan-ruiz
     'mediocampista
@@ -154,6 +164,7 @@
     #f #t #f #f
     #t #f #f)
 
+   ; 3. Celso Borges
    (crear-jugador
     'celso-borges
     'mediocampista
@@ -162,6 +173,7 @@
     #t #t #f #f
     #t #f #f)
 
+   ; 4. Joel Campbell
    (crear-jugador
     'joel-campbell
     'delantero
@@ -170,6 +182,7 @@
     #t #t #f #f
     #t #f #f)
 
+   ; 5. Walter Centeno
    (crear-jugador
     'walter-centeno
     'mediocampista
@@ -178,6 +191,7 @@
     #t #f #f #f
     #t #t #t)
 
+   ; 6. Luis Marín
    (crear-jugador
     'luis-marin
     'defensor
@@ -186,6 +200,7 @@
     #f #t #f #f
     #t #t #t)
 
+   ; 7. Rolando Fonseca
    (crear-jugador
     'rolando-fonseca
     'delantero
@@ -194,6 +209,7 @@
     #t #t #f #f
     #t #f #f)
 
+   ; 8. Álvaro Saborío
    (crear-jugador
     'alvaro-saborio
     'delantero
@@ -202,6 +218,7 @@
     #t #f #f #f
     #t #t #t)
 
+   ; 9. Paulo Wanchope
    (crear-jugador
     'paulo-wanchope
     'delantero
@@ -210,6 +227,7 @@
     #f #t #t #f
     #t #t #t)
 
+   ; 10. Rónald Gómez
    (crear-jugador
     'ronald-gomez
     'delantero
@@ -218,6 +236,7 @@
     #t #t #f #f
     #t #t #t)
 
+   ; 11. Mauricio Solís
    (crear-jugador
     'mauricio-solis
     'mediocampista
@@ -226,6 +245,7 @@
     #t #t #t #f
     #t #t #t)
 
+   ; 12. Michael Umaña
    (crear-jugador
     'michael-umana
     'defensor
@@ -234,6 +254,7 @@
     #t #t #f #f
     #t #f #t)
 
+   ; 13. Harold Wallace
    (crear-jugador
     'harold-wallace
     'defensor
@@ -242,6 +263,7 @@
     #t #t #f #f
     #t #t #t)
 
+   ; 14. Christian Bolaños
    (crear-jugador
     'christian-bolanos
     'mediocampista
@@ -250,6 +272,7 @@
     #t #f #f #f
     #t #t #t)
 
+   ; 15. Yeltsin Tejeda
    (crear-jugador
     'yeltsin-tejeda
     'mediocampista
@@ -258,6 +281,7 @@
     #t #f #t #f
     #t #f #f)
 
+   ; 16. Cristian Gamboa
    (crear-jugador
     'cristian-gamboa
     'defensor
@@ -266,6 +290,7 @@
     #f #f #f #f
     #t #f #f)
 
+   ; 17. Júnior Díaz
    (crear-jugador
     'junior-diaz
     'defensor
@@ -274,6 +299,7 @@
     #f #t #t #f
     #t #f #f)
 
+   ; 18. Giancarlo González
    (crear-jugador
     'geancarlo-gonzalez
     'defensor
@@ -282,6 +308,7 @@
     #t #t #f #f
     #t #f #f)
 
+   ; 19. Óscar Duarte
    (crear-jugador
     'oscar-duarte
     'defensor
@@ -290,6 +317,7 @@
     #t #f #f #f
     #t #f #f)
 
+   ; 20. Francisco Calvo
    (crear-jugador
     'francisco-calvo
     'defensor
@@ -298,6 +326,7 @@
     #t #f #t #f
     #t #f #f)
 
+   ; 21. Kendall Waston
    (crear-jugador
     'kendall-waston
     'defensor
@@ -306,6 +335,7 @@
     #t #f #f #f
     #t #f #f)
 
+   ; 22. Johnny Acosta
    (crear-jugador
     'johnny-acosta
     'defensor
@@ -314,6 +344,7 @@
     #f #t #t #f
     #t #f #f)
 
+   ; 23. Marco Ureña
    (crear-jugador
     'marco-urena
     'delantero
@@ -322,6 +353,7 @@
     #t #t #f #f
     #t #f #f)
 
+   ; 24. Patrick Pemberton
    (crear-jugador
     'patrick-pemberton
     'portero
@@ -330,6 +362,7 @@
     #f #t #f #f
     #f #f #f)
 
+   ; 25. Esteban Alvarado
    (crear-jugador
     'esteban-alvarado
     'portero
@@ -338,6 +371,7 @@
     #t #t #t #f
     #f #f #f)
 
+   ; 26. Randall Brenes
    (crear-jugador
     'randall-brenes
     'delantero
@@ -346,6 +380,7 @@
     #t #f #f #t
     #t #f #f)
 
+   ; 27. José Miguel Cubero
    (crear-jugador
     'jose-miguel-cubero
     'mediocampista
@@ -354,6 +389,7 @@
     #f #t #t #f
     #t #f #f)
 
+   ; 28. Mauricio Montero
    (crear-jugador
     'mauricio-montero
     'defensor
@@ -362,6 +398,7 @@
     #f #t #f #f
     #t #f #f)
 
+   ; 29. Hernán Medford
    (crear-jugador
     'hernan-medford
     'delantero
@@ -370,6 +407,7 @@
     #t #t #t #f
     #t #f #f)
 
+   ; 30. Óscar Ramírez
    (crear-jugador
     'oscar-ramirez
     'mediocampista
@@ -378,25 +416,35 @@
     #t #t #f #f
     #t #f #f)))
 
-;; Devuelve únicamente los nombres de las entidades.
+; Devuelve una lista con los nombres
+; de todas las entidades registradas.
 (define (obtener-entidades)
   (map car conocimiento))
 
-;; Devuelve las características de una entidad.
+; Busca una entidad y devuelve todas sus características.
+; Si la entidad no existe, devuelve una lista vacía.
 (define (obtener-caracteristicas entidad)
   (define jugador
     (assoc entidad conocimiento))
 
-  (if jugador
-      (cdr jugador)
-      '()))
+  (cond
+    [jugador
+     (cdr jugador)]
 
-;; Busca el valor de una característica específica.
+    [else
+     '()]))
+
+; Busca el valor de una característica específica.
+; Si la entidad o característica no existe,
+; devuelve el símbolo desconocido.
 (define (buscar-valor entidad caracteristica)
   (define dato
     (assoc caracteristica
            (obtener-caracteristicas entidad)))
 
-  (if dato
-      (cadr dato)
-      'desconocido))
+  (cond
+    [dato
+     (cadr dato)]
+
+    [else
+     'desconocido]))
