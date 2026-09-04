@@ -6,7 +6,7 @@ from pathlib import Path
 class ComunicacionScheme:
     """
     Maneja la comunicación entre Python y el servidor Scheme.
-
+python
     Python envía mensajes JSON por stdin.
     Scheme responde mensajes JSON por stdout.
     """

@@ -110,7 +110,9 @@
 ;; Obtiene los hechos de los candidatos que compiten fuertemente
 (define (candidatos-activos-hechos puntuaciones-ordenadas)
   (define mejor-score (if (null? puntuaciones-ordenadas) 0.0 (cdr (car puntuaciones-ordenadas))))
-  (define umbral (- mejor-score 1.5)) ; Tolerancia para candidatos similares
+  ;; Aumentamos el umbral a 4.5 para ser más tolerantes a errores del usuario
+  ;; (permite sobrevivir hasta a 2 respuestas totalmente erróneas).
+  (define umbral (- mejor-score 4.5)) 
   (define activos (filter (lambda (p) (>= (cdr p) umbral)) puntuaciones-ordenadas))
   (map (lambda (act)
          (cdr (assoc (car act) conocimiento-expandido)))
@@ -119,9 +121,18 @@
 ;; Obtiene la siguiente mejor pregunta
 (define (siguiente-pregunta respuestas)
   (define puntuaciones (ordenar-candidatos (puntuar-candidatos respuestas)))
-  (define activos-hechos (candidatos-activos-hechos puntuaciones))
-  (define preguntas-hechas (map car respuestas))
-  (seleccionar-pregunta activos-hechos preguntas-hechas))
+  (define mejor-score (if (null? puntuaciones) 0.0 (cdr (first puntuaciones))))
+  (define segundo-score (if (> (length puntuaciones) 1) (cdr (second puntuaciones)) -9999.0))
+  
+  ;; Condición de finalización:
+  ;; Si el líder le saca una ventaja irremontable al segundo lugar (>= 4.5 puntos)
+  ;; o si ya hemos hecho muchas preguntas (ej. 20), forzamos el resultado.
+  (if (or (>= (- mejor-score segundo-score) 4.5)
+          (>= (length respuestas) 20))
+      #f
+      (let ([activos-hechos (candidatos-activos-hechos puntuaciones)])
+        (define preguntas-hechas (map car respuestas))
+        (seleccionar-pregunta activos-hechos preguntas-hechas))))
 
 ;; Justifica la predicción
 (define (explicacion nombre-candidato respuestas)

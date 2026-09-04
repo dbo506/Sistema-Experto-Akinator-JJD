@@ -29,9 +29,13 @@
   
   (define si (car conteo))
   (define no (cadr conteo))
-  ;; Fórmula: penalizar la diferencia (queremos que si = no) 
-  ;; y premiar la cantidad total para evitar divisiones de 0
-  (- (abs (- si no)) (+ si no)))
+  
+  ;; Si una pregunta no divide a los candidatos restantes en absoluto 
+  ;; (es decir, todos tienen 'si' o todos tienen 'no'), 
+  ;; no aporta nueva información y es ilógico/redundante preguntarla.
+  (if (or (= si 0) (= no 0))
+      9999 ; Puntaje altísimo para descartarla
+      (- (abs (- si no)) (+ si no))))
 
 ;; Selecciona la característica que mejor discrimina a los candidatos activos
 ;; y que no se haya preguntado todavía.
@@ -43,11 +47,15 @@
   (if (null? candidatas)
       #f
       (let* ([evaluaciones (map (lambda (p) (cons p (evaluar-pregunta p candidatos-activos-hechos))) candidatas)]
-             [mejor (foldl (lambda (eval mejor-actual)
-                             (if (< (cdr eval) (cdr mejor-actual))
-                                 eval
-                                 mejor-actual))
-                           (car evaluaciones)
-                           (cdr evaluaciones))])
-        (car mejor))))
-
+             ;; Filtramos las que sacaron 9999 (las que no dividen a los candidatos)
+             [utiles (filter (lambda (eval) (< (cdr eval) 9999)) evaluaciones)])
+        
+        (if (null? utiles)
+            #f ; Ya no hay ninguna pregunta útil que logre separar a los candidatos restantes
+            (let ([mejor (foldl (lambda (eval mejor-actual)
+                                  (if (< (cdr eval) (cdr mejor-actual))
+                                      eval
+                                      mejor-actual))
+                                (car utiles)
+                                (cdr utiles))])
+              (car mejor))))))
