@@ -44,7 +44,7 @@ class InterfazAkinator:
         # FONDO PRINCIPAL
         # ------------------------------------------------------
 
-        self.root.configure(bg="#f4f6fb")
+        self.root.configure(bg="#FFFFFF")
 
         # ------------------------------------------------------
         # ENCABEZADO
@@ -52,7 +52,7 @@ class InterfazAkinator:
 
         encabezado = tk.Frame(
             self.root,
-            bg="#20243a",
+            bg="#0032A0",
             height=90
         )
 
@@ -61,23 +61,17 @@ class InterfazAkinator:
 
         titulo = tk.Label(
             encabezado,
-            text="🧞 AKINATOR",
-            font=("Arial", 28, "bold"),
+            text="TICONATOR",
+            font=("Segoe UI", 28, "bold"),
             fg="white",
-            bg="#20243a"
+            bg="#0032A0"
         )
 
         titulo.pack(pady=(15, 0))
 
-        subtitulo = tk.Label(
-            encabezado,
-            text="Sistema Experto Basado en Reglas",
-            font=("Arial", 11),
-            fg="#d8dbea",
-            bg="#20243a"
-        )
+      
 
-        subtitulo.pack()
+
 
         # ------------------------------------------------------
         # CONTENEDOR PRINCIPAL
@@ -85,8 +79,113 @@ class InterfazAkinator:
 
         contenido = tk.Frame(
             self.root,
-            bg="#f4f6fb"
+            bg="#FFFFFF"
         )
+
+                # ------------------------------------------------------
+        # PANEL INFERIOR (LISTA DE JUGADORES Y HISTORIAL)
+        # ------------------------------------------------------
+        panel_inferior = tk.Frame(self.root, bg="#FFFFFF")
+        panel_inferior.pack(side="bottom", fill="x", pady=(0, 20), padx=20)
+        
+        self.historial_frame = tk.Frame(
+            panel_inferior,
+            bg="#f4f6fb",
+            bd=0,
+            width=250
+        )
+        self.historial_frame.pack(side="left", fill="y", padx=(0, 20))
+        self.historial_frame.pack_propagate(False)
+
+        historial_titulo = tk.Label(
+            self.historial_frame,
+            text="Historial de respuestas",
+            font=("Segoe UI", 10, "bold"),
+            bg="#f4f6fb",
+            fg="#0032A0"
+        )
+        historial_titulo.pack(anchor="w", padx=15, pady=(8, 3))
+
+        self.historial_label = tk.Label(
+            self.historial_frame,
+            text="Todavía no hay respuestas.",
+            font=("Segoe UI", 9),
+            bg="#f4f6fb",
+            fg="#333333",
+            justify="left",
+            anchor="w",
+            wraplength=220
+        )
+        self.historial_label.pack(fill="x", padx=15, pady=(0, 10))
+
+        # Contenedor de la cuadricula de jugadores
+        grid_container = tk.Frame(panel_inferior, bg="#FFFFFF")
+        grid_container.pack(side="left", expand=True)
+
+        # Cargar jugadores y hacer circulos
+        def make_circle_image(img_path, size=(85, 85)):
+            from PIL import Image, ImageDraw
+            try:
+                img = Image.open(img_path).convert("RGBA")
+            except:
+                img = Image.new("RGBA", size, (200,200,200,255))
+            
+            min_dim = min(img.size)
+            left = (img.width - min_dim)/2
+            top = (img.height - min_dim)/2
+            img = img.crop((left, top, left+min_dim, top+min_dim))
+            img = img.resize(size, Image.Resampling.LANCZOS)
+            
+            mask = Image.new('L', size, 0)
+            draw = ImageDraw.Draw(mask)
+            draw.ellipse((0, 0) + size, fill=255)
+            
+            result = Image.new('RGBA', size, (255, 255, 255, 0))
+            result.paste(img, (0, 0), mask=mask)
+            return result
+
+        self.fotos_inferior = []
+        try:
+            import re
+            ruta_conocimiento = Path(__file__).resolve().parent.parent / "backend" / "conocimiento.scm"
+            cont_scm = ruta_conocimiento.read_text(encoding="utf-8")
+            matches = re.findall(r"\'([a-z-]+)\n\s+\'(portero|defensor|mediocampista|delantero)", cont_scm)
+            jugadores_ids = [m[0] for m in matches]
+            ruta_img = Path(__file__).resolve().parent / "imagenes"
+            
+            sorted_jugadores = sorted(jugadores_ids)
+            for idx, j_id in enumerate(sorted_jugadores):
+                j_name = j_id.replace("-", " ").title()
+                
+                img_file = None
+                for ext in [".jpg", ".jpeg", ".png"]:
+                    p = ruta_img / f"{j_id}{ext}"
+                    if p.exists():
+                        img_file = p
+                        break
+                
+                if img_file:
+                    circ_img = make_circle_image(img_file, (85, 85))
+                else:
+                    circ_img = Image.new("RGBA", (85,85), (200,200,200,255))
+                
+                tk_img = ImageTk.PhotoImage(circ_img)
+                self.fotos_inferior.append(tk_img)
+                
+                # Fila y Columna
+                fila = idx // 10
+                columna = idx % 10
+                
+                frame_j = tk.Frame(grid_container, bg="#FFFFFF")
+                frame_j.grid(row=fila, column=columna, padx=8, pady=5)
+                
+                lbl_img = tk.Label(frame_j, image=tk_img, bg="#FFFFFF")
+                lbl_img.pack()
+                lbl_txt = tk.Label(frame_j, text=j_name, font=("Segoe UI", 10, "bold"), bg="#FFFFFF", fg="#0032A0", wraplength=100, justify="center")
+                lbl_txt.pack(pady=(3, 0))
+                
+        except Exception as e:
+            print("Error cargando jugadores inferiores:", e)
 
         contenido.pack(
             fill="both",
@@ -96,69 +195,12 @@ class InterfazAkinator:
         )
 
         # ------------------------------------------------------
-        # PANEL IZQUIERDO
-        # ------------------------------------------------------
-
-        panel_izquierdo = tk.Frame(
-            contenido,
-            bg="#20243a",
-            width=250
-        )
-
-        panel_izquierdo.pack(
-            side="left",
-            fill="y",
-            padx=(0, 20)
-        )
-
-        panel_izquierdo.pack_propagate(False)
-
-        titulo_akinator = tk.Label(
-            panel_izquierdo,
-            text="🧞",
-            font=("Arial", 75),
-            fg="white",
-            bg="#20243a"
-        )
-
-        titulo_akinator.pack(
-            pady=(35, 10)
-        )
-
-        texto_akinator = tk.Label(
-            panel_izquierdo,
-            text="Estoy pensando...",
-            font=("Arial", 16, "bold"),
-            fg="white",
-            bg="#20243a"
-        )
-
-        texto_akinator.pack()
-
-        texto_info = tk.Label(
-            panel_izquierdo,
-            text=(
-                "Responde las preguntas\n"
-                "para descubrir qué\n"
-                "jugador estás pensando."
-            ),
-            font=("Arial", 11),
-            fg="#d8dbea",
-            bg="#20243a",
-            justify="center"
-        )
-
-        texto_info.pack(
-            pady=20
-        )
-
-        # ------------------------------------------------------
         # PANEL DERECHO
         # ------------------------------------------------------
 
         panel_derecho = tk.Frame(
             contenido,
-            bg="#f4f6fb"
+            bg="#FFFFFF"
         )
 
         panel_derecho.pack(
@@ -173,7 +215,7 @@ class InterfazAkinator:
 
         informacion = tk.Frame(
             panel_derecho,
-            bg="#f4f6fb"
+            bg="#FFFFFF"
         )
 
         informacion.pack(
@@ -184,8 +226,8 @@ class InterfazAkinator:
         self.contador_label = tk.Label(
             informacion,
             text="Pregunta 0",
-            font=("Arial", 11, "bold"),
-            bg="#f4f6fb",
+            font=("Segoe UI", 11, "bold"),
+            bg="#FFFFFF",
             fg="#20243a"
         )
 
@@ -196,8 +238,8 @@ class InterfazAkinator:
         self.candidatos_label = tk.Label(
             informacion,
             text="Sistema experto activo",
-            font=("Arial", 10),
-            bg="#f4f6fb",
+            font=("Segoe UI", 10),
+            bg="#FFFFFF",
             fg="#666666"
         )
 
@@ -239,7 +281,7 @@ class InterfazAkinator:
         titulo_pregunta = tk.Label(
             tarjeta,
             text="PREGUNTA",
-            font=("Arial", 11, "bold"),
+            font=("Segoe UI", 11, "bold"),
             bg="white",
             fg="#666666"
         )
@@ -248,19 +290,25 @@ class InterfazAkinator:
             pady=(25, 5)
         )
 
-        self.imagen_resultado_label = tk.Label(
-            tarjeta,
+        self.frame_imagenes = tk.Frame(tarjeta, bg="white")
+        self.frame_imagenes.pack(pady=(10, 0))
+        
+        self.imagen_estado_akinator_label = tk.Label(
+            self.frame_imagenes,
             bg="white"
         )
-
-        self.imagen_resultado_label.pack(
-            pady=(10, 0)
+        self.imagen_estado_akinator_label.pack(side="left", padx=10)
+        
+        self.imagen_resultado_label = tk.Label(
+            self.frame_imagenes,
+            bg="white"
         )
+        self.imagen_resultado_label.pack(side="left", padx=10)
 
         self.pregunta_label = tk.Label(
             tarjeta,
             text="Conectando con Scheme...",
-            font=("Arial", 23, "bold"),
+            font=("Segoe UI", 23, "bold"),
             bg="white",
             fg="#20243a",
             wraplength=650,
@@ -279,7 +327,7 @@ class InterfazAkinator:
 
         self.botones_frame = tk.Frame(
             panel_derecho,
-            bg="#f4f6fb"
+            bg="#FFFFFF"
         )
 
         self.botones_frame.pack(
@@ -317,54 +365,7 @@ class InterfazAkinator:
             -1.0
         )
 
-        # ------------------------------------------------------
-        # PANEL DE HISTORIAL
-        # ------------------------------------------------------
-
-        self.historial_frame = tk.Frame(
-            panel_derecho,
-            bg="white",
-            bd=1,
-            relief="solid"
-        )
-
-        self.historial_frame.pack(
-            fill="x",
-            pady=(5, 0)
-        )
-
-        historial_titulo = tk.Label(
-            self.historial_frame,
-            text="Historial de respuestas",
-            font=("Arial", 10, "bold"),
-            bg="white",
-            fg="#20243a"
-        )
-
-        historial_titulo.pack(
-            anchor="w",
-            padx=15,
-            pady=(8, 3)
-        )
-
-        self.historial_label = tk.Label(
-            self.historial_frame,
-            text="Todavía no hay respuestas.",
-            font=("Arial", 9),
-            bg="white",
-            fg="#777777",
-            justify="left",
-            anchor="w",
-            wraplength=700
-        )
-
-        self.historial_label.pack(
-            fill="x",
-            padx=15,
-            pady=(0, 10)
-        )
-
-    # ==========================================================
+        # ==========================================================
     # CREAR BOTÓN
     # ==========================================================
 
@@ -373,7 +374,11 @@ class InterfazAkinator:
         boton = tk.Button(
             padre,
             text=texto,
-            font=("Arial", 10, "bold"),
+            font=("Segoe UI", 11, "bold"),
+            bg="#0032A0",
+            fg="white",
+            activebackground="#002270",
+            activeforeground="white",
             command=lambda: self.responder(valor),
             relief="flat",
             bd=0,
@@ -411,7 +416,7 @@ class InterfazAkinator:
 
                 imagen = Image.open(ruta_imagen)
 
-                imagen.thumbnail((260, 260))
+                imagen.thumbnail((220, 220))
 
                 self.foto_resultado = ImageTk.PhotoImage(imagen)
 
@@ -494,6 +499,34 @@ class InterfazAkinator:
     # MOSTRAR PREGUNTA
     # ==========================================================
 
+    def actualizar_imagen_estado(self, estado="pensando"):
+        ruta_img = Path(__file__).resolve().parent / "imagenes"
+        nombre_arch = "akinator_principal.png"
+        
+        if estado == "encontro":
+            nombre_arch = "akinator_encontró.png"
+        elif self.numero_pregunta == 1:
+            nombre_arch = "akinator_principal.png"
+        else:
+            ciclo = (self.numero_pregunta - 2) % 3
+            if ciclo == 0:
+                nombre_arch = "akinator_pensando1.png"
+            elif ciclo == 1:
+                nombre_arch = "akinator_pensando2.png"
+            else:
+                nombre_arch = "akinator_sonriente.png"
+                
+        try:
+            img = Image.open(ruta_img / nombre_arch)
+            if estado == "encontro":
+                img.thumbnail((220, 220))
+            else:
+                img.thumbnail((320, 320))
+            self.foto_estado = ImageTk.PhotoImage(img)
+            self.imagen_estado_akinator_label.config(image=self.foto_estado)
+        except Exception as e:
+            print("Error cargando imagen de estado:", e)
+
     def mostrar_pregunta(self, datos):
 
         self.partida_activa = True
@@ -504,6 +537,8 @@ class InterfazAkinator:
         )
 
         self.numero_pregunta += 1
+        self.actualizar_imagen_estado("pensando")
+
 
         texto = self.pregunta_actual.replace(
             "-",
@@ -514,7 +549,7 @@ class InterfazAkinator:
 
         self.pregunta_label.config(
             text=f"¿La persona cumple con:\n\n{texto}?",
-            font=("Arial", 23, "bold")
+            font=("Segoe UI", 23, "bold")
         )
 
         self.contador_label.config(
@@ -554,7 +589,9 @@ class InterfazAkinator:
             "Desconocido"
         )
 
+        self.actualizar_imagen_estado("encontro")
         self.cargar_imagen_jugador(jugador)
+
 
         confianza = datos.get(
             "confianza",
@@ -598,7 +635,7 @@ class InterfazAkinator:
 
         self.pregunta_label.config(
             text=texto_resultado,
-            font=("Arial", 23, "bold")
+            font=("Segoe UI", 23, "bold")
         )
 
         # ------------------------------------------------------
@@ -634,13 +671,13 @@ class InterfazAkinator:
 
         self.resultado_frame = tk.Frame(
             self.botones_frame.master,
-            bg="#f4f6fb"
+            bg="#FFFFFF"
         )
 
         self.resultado_frame.pack(
             fill="x",
             pady=(20, 10),
-            before=self.historial_frame
+            
         )
 
         self.botones_frame.pack_forget()
@@ -648,7 +685,7 @@ class InterfazAkinator:
         self.boton_correcto = tk.Button(
             self.resultado_frame,
             text="✓  ¡Correcto!",
-            font=("Arial", 12, "bold"),
+            font=("Segoe UI", 12, "bold"),
             command=self.prediccion_correcta,
             padx=30,
             pady=10,
@@ -664,7 +701,7 @@ class InterfazAkinator:
         self.boton_incorrecto = tk.Button(
             self.resultado_frame,
             text="✕  Incorrecto",
-            font=("Arial", 12, "bold"),
+            font=("Segoe UI", 12, "bold"),
             command=self.prediccion_incorrecta,
             padx=30,
             pady=10,
@@ -680,7 +717,7 @@ class InterfazAkinator:
         self.boton_nueva = tk.Button(
             self.resultado_frame,
             text="🔄  Nueva partida",
-            font=("Arial", 12, "bold"),
+            font=("Segoe UI", 12, "bold"),
             command=self.nueva_partida,
             padx=30,
             pady=10,
@@ -769,7 +806,7 @@ class InterfazAkinator:
         self.botones_frame.pack(
             fill="x",
             pady=(20, 10),
-            before=self.historial_frame
+            
         )
 
         self.numero_pregunta = 0
@@ -782,9 +819,13 @@ class InterfazAkinator:
         # RESTAURAR INTERFAZ
         # ------------------------------------------------------
 
+        # Limpiar la imagen mostrada
+        self.foto_resultado = None
+        self.imagen_resultado_label.config(image="")
+
         self.pregunta_label.config(
             text="Iniciando nueva partida...",
-            font=("Arial", 23, "bold")
+            font=("Segoe UI", 23, "bold")
         )
 
         self.contador_label.config(
@@ -826,7 +867,7 @@ class InterfazAkinator:
 
             return
 
-        ultimas = self.historial[-5:]
+        ultimas = self.historial[-12:]
 
         nombres = {
             1.0: "Sí",
