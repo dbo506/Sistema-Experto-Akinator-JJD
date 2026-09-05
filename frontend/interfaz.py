@@ -13,8 +13,10 @@ class InterfazAkinator:
         self.root = root
 
         self.root.title("Ticonator - Sistema Experto")
-        self.root.geometry("1100x720")
-        self.root.minsize(950, 650)
+        ancho = min(1100, self.root.winfo_screenwidth() - 80)
+        alto = min(720, self.root.winfo_screenheight() - 100)
+        self.root.geometry(f"{ancho}x{alto}")
+        self.root.minsize(850, 600)
 
         self.scheme = ComunicacionScheme()
 
@@ -56,7 +58,9 @@ class InterfazAkinator:
             height=90
         )
 
-        encabezado.pack(fill="x")
+        self.root.columnconfigure(0, weight=1)
+        self.root.rowconfigure(2, weight=1)
+        encabezado.grid(row=0, column=0, sticky="ew")
         encabezado.pack_propagate(False)
 
         titulo = tk.Label(
@@ -86,7 +90,7 @@ class InterfazAkinator:
         # PANEL INFERIOR (LISTA DE JUGADORES Y HISTORIAL)
         # ------------------------------------------------------
         panel_inferior = tk.Frame(self.root, bg="#FFFFFF")
-        panel_inferior.pack(side="bottom", fill="x", pady=(0, 20), padx=20)
+        panel_inferior.grid(row=2, column=0, sticky="nsew", pady=(0, 10), padx=20)
         
         self.historial_frame = tk.Frame(
             panel_inferior,
@@ -119,11 +123,46 @@ class InterfazAkinator:
         self.historial_label.pack(fill="x", padx=15, pady=(0, 10))
 
         # Contenedor de la cuadricula de jugadores
-        grid_container = tk.Frame(panel_inferior, bg="#FFFFFF")
-        grid_container.pack(side="left", expand=True)
+        jugadores_panel = tk.Frame(panel_inferior, bg="#FFFFFF")
+        jugadores_panel.pack(side="left", fill="both", expand=True)
+        jugadores_canvas = tk.Canvas(
+            jugadores_panel, bg="#FFFFFF", highlightthickness=0,
+            width=1, height=100
+        )
+        scroll_jugadores = ttk.Scrollbar(
+            jugadores_panel, orient="vertical", command=jugadores_canvas.yview
+        )
+        scroll_jugadores.pack(side="right", fill="y")
+        jugadores_canvas.pack(side="left", fill="both", expand=True)
+        jugadores_canvas.configure(yscrollcommand=scroll_jugadores.set)
+        grid_container = tk.Frame(jugadores_canvas, bg="#FFFFFF")
+        ventana_jugadores = jugadores_canvas.create_window(
+            (0, 0), window=grid_container, anchor="nw"
+        )
+        cuadros_jugadores = []
+
+        def ajustar_jugadores(event):
+            jugadores_canvas.itemconfigure(ventana_jugadores, width=event.width)
+            columnas = max(1, event.width // 116)
+            for idx, cuadro in enumerate(cuadros_jugadores):
+                cuadro.grid(row=idx // columnas, column=idx % columnas)
+
+        def desplazar_jugadores(event):
+            if jugadores_canvas.bbox("all")[3] > jugadores_canvas.winfo_height():
+                paso = -1 if event.delta > 0 or event.num == 4 else 1
+                jugadores_canvas.yview_scroll(paso, "units")
+            return "break"
+
+        jugadores_canvas.bind("<Configure>", ajustar_jugadores)
+        grid_container.bind(
+            "<Configure>",
+            lambda event: jugadores_canvas.configure(
+                scrollregion=jugadores_canvas.bbox("all")
+            )
+        )
 
         # Cargar jugadores y hacer circulos
-        def make_circle_image(img_path, size=(85, 85)):
+        def make_circle_image(img_path, size=(70, 70)):
             from PIL import Image, ImageDraw
             try:
                 img = Image.open(img_path).convert("RGBA")
@@ -165,9 +204,9 @@ class InterfazAkinator:
                         break
                 
                 if img_file:
-                    circ_img = make_circle_image(img_file, (85, 85))
+                    circ_img = make_circle_image(img_file, (70, 70))
                 else:
-                    circ_img = Image.new("RGBA", (85,85), (200,200,200,255))
+                    circ_img = Image.new("RGBA", (70,70), (200,200,200,255))
                 
                 tk_img = ImageTk.PhotoImage(circ_img)
                 self.fotos_inferior.append(tk_img)
@@ -178,20 +217,25 @@ class InterfazAkinator:
                 
                 frame_j = tk.Frame(grid_container, bg="#FFFFFF")
                 frame_j.grid(row=fila, column=columna, padx=8, pady=5)
+                cuadros_jugadores.append(frame_j)
                 
                 lbl_img = tk.Label(frame_j, image=tk_img, bg="#FFFFFF")
                 lbl_img.pack()
                 lbl_txt = tk.Label(frame_j, text=j_name, font=("Segoe UI", 10, "bold"), bg="#FFFFFF", fg="#0032A0", wraplength=100, justify="center")
                 lbl_txt.pack(pady=(3, 0))
+                for widget in (frame_j, lbl_img, lbl_txt):
+                    widget.bind("<MouseWheel>", desplazar_jugadores)
+                    widget.bind("<Button-4>", desplazar_jugadores)
+                    widget.bind("<Button-5>", desplazar_jugadores)
                 
         except Exception as e:
             print("Error cargando jugadores inferiores:", e)
 
-        contenido.pack(
-            fill="both",
-            expand=True,
-            padx=30,
-            pady=25
+        jugadores_canvas.bind("<MouseWheel>", desplazar_jugadores)
+        grid_container.bind("<MouseWheel>", desplazar_jugadores)
+
+        contenido.grid(
+            row=1, column=0, sticky="ew", padx=20, pady=10
         )
 
         # ------------------------------------------------------
@@ -260,7 +304,7 @@ class InterfazAkinator:
 
         self.progreso.pack(
             fill="x",
-            pady=(0, 20)
+            pady=(0, 10)
         )
 
         # ------------------------------------------------------
@@ -287,7 +331,7 @@ class InterfazAkinator:
         )
 
         titulo_pregunta.pack(
-            pady=(25, 5)
+            pady=(10, 5)
         )
 
         self.frame_imagenes = tk.Frame(tarjeta, bg="white")
@@ -308,7 +352,7 @@ class InterfazAkinator:
         self.pregunta_label = tk.Label(
             tarjeta,
             text="Conectando con Scheme...",
-            font=("Segoe UI", 23, "bold"),
+            font=("Segoe UI", 20, "bold"),
             bg="white",
             fg="#20243a",
             wraplength=650,
@@ -318,8 +362,14 @@ class InterfazAkinator:
         self.pregunta_label.pack(
             fill="x",
             padx=40,
-            pady=(10, 20)
-        )   
+            pady=(5, 10)
+        )
+        tarjeta.bind(
+            "<Configure>",
+            lambda event: self.pregunta_label.configure(
+                wraplength=max(1, event.width - 80)
+            )
+        )
 
         # ------------------------------------------------------
         # BOTONES DE RESPUESTA
@@ -332,7 +382,7 @@ class InterfazAkinator:
 
         self.botones_frame.pack(
             fill="x",
-            pady=(20, 10)
+            pady=(10, 5)
         )
 
         self.boton_si = self.crear_boton(
@@ -416,7 +466,7 @@ class InterfazAkinator:
 
                 imagen = Image.open(ruta_imagen)
 
-                imagen.thumbnail((220, 220))
+                imagen.thumbnail((160, 160))
 
                 self.foto_resultado = ImageTk.PhotoImage(imagen)
 
@@ -519,9 +569,9 @@ class InterfazAkinator:
         try:
             img = Image.open(ruta_img / nombre_arch)
             if estado == "encontro":
-                img.thumbnail((220, 220))
+                img.thumbnail((160, 160))
             else:
-                img.thumbnail((320, 320))
+                img.thumbnail((120, 120))
             self.foto_estado = ImageTk.PhotoImage(img)
             self.imagen_estado_akinator_label.config(image=self.foto_estado)
         except Exception as e:
@@ -549,7 +599,7 @@ class InterfazAkinator:
 
         self.pregunta_label.config(
             text=f"¿La persona cumple con:\n\n{texto}?",
-            font=("Segoe UI", 23, "bold")
+            font=("Segoe UI", 20, "bold")
         )
 
         self.contador_label.config(
@@ -635,7 +685,7 @@ class InterfazAkinator:
 
         self.pregunta_label.config(
             text=texto_resultado,
-            font=("Segoe UI", 23, "bold")
+            font=("Segoe UI", 20, "bold")
         )
 
         # ------------------------------------------------------
@@ -676,7 +726,7 @@ class InterfazAkinator:
 
         self.resultado_frame.pack(
             fill="x",
-            pady=(20, 10),
+            pady=(10, 5),
             
         )
 
@@ -805,7 +855,7 @@ class InterfazAkinator:
 
         self.botones_frame.pack(
             fill="x",
-            pady=(20, 10),
+            pady=(10, 5),
             
         )
 
@@ -825,7 +875,7 @@ class InterfazAkinator:
 
         self.pregunta_label.config(
             text="Iniciando nueva partida...",
-            font=("Segoe UI", 23, "bold")
+            font=("Segoe UI", 20, "bold")
         )
 
         self.contador_label.config(
