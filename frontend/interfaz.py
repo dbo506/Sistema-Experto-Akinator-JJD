@@ -7,6 +7,40 @@ from PIL import Image, ImageTk
 from frontend.comunicacion_scheme import ComunicacionScheme
 
 
+# Textos de presentacion; las claves siguen siendo los identificadores de Scheme.
+PREGUNTAS_VISIBLES = {
+    "portero": "¿El futbolista juega o jugó como portero?",
+    "defensor": "¿El futbolista juega o jugó como defensor?",
+    "mediocampista": "¿El futbolista juega o jugó como mediocampista?",
+    "delantero": "¿El futbolista juega o jugó como delantero?",
+    "retirado": "¿El futbolista está retirado?",
+    "mundialista": "¿El futbolista participó en alguna Copa Mundial?",
+    "mundial-2014": "¿El futbolista participó en el Mundial de 2014?",
+    "mas-50-seleccion": "¿El futbolista disputó más de 50 partidos con la Selección de Costa Rica?",
+    "mas-100-seleccion": "¿El futbolista disputó más de 100 partidos con la Selección de Costa Rica?",
+    "capitan-seleccion": "¿El futbolista fue capitán de la Selección de Costa Rica?",
+    "jugo-europa": "¿El futbolista jugó en algún club europeo?",
+    "jugo-mls": "¿El futbolista jugó en la Major League Soccer (MLS)?",
+    "jugo-mexico": "¿El futbolista jugó en algún club de México?",
+    "jugo-saprissa": "¿El futbolista jugó en el Deportivo Saprissa?",
+    "jugo-alajuelense": "¿El futbolista jugó en Liga Deportiva Alajuelense?",
+    "jugo-herediano": "¿El futbolista jugó en el Club Sport Herediano?",
+    "jugo-cartagines": "¿El futbolista jugó en el Club Sport Cartaginés?",
+    "anoto-seleccion": "¿El futbolista anotó algún gol con la Selección de Costa Rica?",
+    "mundial-2002": "¿El futbolista participó en el Mundial de 2002?",
+    "mundial-2006": "¿El futbolista participó en el Mundial de 2006?",
+    "area-defensiva": "¿El futbolista juega o jugó como portero o defensor?",
+    "area-creativa": "¿El futbolista juega o jugó en el mediocampo?",
+    "area-ofensiva": "¿El futbolista juega o jugó en la delantera?",
+    "generacion-2014": "¿El futbolista formó parte de la Selección de Costa Rica en el Mundial de 2014?",
+    "referente-seleccion": "¿El futbolista fue capitán y disputó más de 100 partidos con la Selección de Costa Rica?",
+    "legionario-europeo": "¿El futbolista jugó en algún club de Europa?",
+    "legionario-norteamerica": "¿El futbolista jugó en algún club de la Major League Soccer (MLS)?",
+    "legionario-mexico": "¿El futbolista jugó en algún club del fútbol mexicano?",
+    "leyenda-mundialista-retirada": "¿El futbolista está retirado y participó en alguna Copa Mundial?"
+}
+
+
 class InterfazAkinator:
 
     def __init__(self, root):
@@ -485,15 +519,14 @@ class InterfazAkinator:
         self.actualizar_imagen_estado("pensando")
 
 
-        texto = self.pregunta_actual.replace(
-            "-",
-            " "
+        texto = PREGUNTAS_VISIBLES.get(
+            self.pregunta_actual,
+            f"\u00bfEl futbolista cumple con la caracter\u00edstica "
+            f"\u00ab{self.pregunta_actual.replace('-', ' ')}\u00bb?"
         )
 
-        texto = texto.capitalize()
-
         self.pregunta_label.config(
-            text=f"¿La persona cumple con:\n\n{texto}?",
+            text=texto,
             font=("Segoe UI", -((12 if self.partida_activa else 12) if self.root.winfo_height() < 700 else 20), "bold")
         )
 
@@ -821,13 +854,13 @@ class InterfazAkinator:
                 "Desconocida"
             )
 
-            pregunta = pregunta.replace(
-                "-",
-                " "
+            pregunta = PREGUNTAS_VISIBLES.get(
+                pregunta,
+                pregunta.replace("-", " ")
             )
 
             textos.append(
-                f"• {pregunta}: {respuesta}"
+                f"• {pregunta} {respuesta}"
             )
 
         if self.explicacion_actual:
