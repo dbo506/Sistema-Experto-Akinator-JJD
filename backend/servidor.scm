@@ -5,6 +5,7 @@
 
 ;; Estado actual de la partida
 (define respuestas '())
+(define pregunta-actual #f)
 
 ;; Convierte un símbolo de Racket a texto
 (define (simbolo->string valor)
@@ -20,28 +21,23 @@
 ;; Inicia una nueva partida
 (define (iniciar)
   (set! respuestas '())
-
-  (define pregunta
-    (siguiente-pregunta respuestas))
+  (set! pregunta-actual (siguiente-pregunta respuestas))
 
   (enviar
    (hash
     'tipo "pregunta"
-    'pregunta (simbolo->string pregunta))))
+    'pregunta (simbolo->string pregunta-actual))))
 
 ;; Procesa una respuesta
 (define (responder valor)
-  (define pregunta
-    (siguiente-pregunta respuestas))
-
-  (if (not pregunta)
+  (if (not pregunta-actual)
       (enviar
        (hash
         'tipo "resultado"
         'mensaje "No hay más preguntas"))
 
       (let* ([nuevas-respuestas
-              (cons (cons pregunta valor) respuestas)]
+              (cons (cons pregunta-actual valor) respuestas)]
 
              [puntuaciones
               (ordenar-candidatos
@@ -64,6 +60,7 @@
 
         ;; Actualizamos el estado
         (set! respuestas nuevas-respuestas)
+        (set! pregunta-actual nueva-pregunta)
 
         (if nueva-pregunta
             (enviar

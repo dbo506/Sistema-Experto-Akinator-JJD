@@ -782,6 +782,10 @@ class InterfazAkinator:
         # RESTAURAR INTERFAZ
         # ------------------------------------------------------
 
+        # Limpiar la imagen mostrada
+        self.foto_resultado = None
+        self.imagen_resultado_label.config(image="")
+
         self.pregunta_label.config(
             text="Iniciando nueva partida...",
             font=("Arial", 23, "bold")
