@@ -1,5 +1,8 @@
 import tkinter as tk
 from tkinter import ttk
+from pathlib import Path
+
+from PIL import Image, ImageTk
 
 from frontend.comunicacion_scheme import ComunicacionScheme
 
@@ -9,7 +12,7 @@ class InterfazAkinator:
     def __init__(self, root):
         self.root = root
 
-        self.root.title("Akinator - Sistema Experto")
+        self.root.title("Ticonator - Sistema Experto")
         self.root.geometry("1100x720")
         self.root.minsize(950, 650)
 
@@ -20,6 +23,7 @@ class InterfazAkinator:
         self.historial = []
         self.partida_activa = True
         self.explicacion_actual = ""
+        self.foto_resultado = None
 
         self.crear_interfaz()
 
@@ -229,8 +233,7 @@ class InterfazAkinator:
         )
 
         tarjeta.pack(
-            fill="both",
-            expand=True
+            fill="x"
         )
 
         titulo_pregunta = tk.Label(
@@ -245,6 +248,15 @@ class InterfazAkinator:
             pady=(25, 5)
         )
 
+        self.imagen_resultado_label = tk.Label(
+            tarjeta,
+            bg="white"
+        )
+
+        self.imagen_resultado_label.pack(
+            pady=(10, 0)
+        )
+
         self.pregunta_label = tk.Label(
             tarjeta,
             text="Conectando con Scheme...",
@@ -256,10 +268,10 @@ class InterfazAkinator:
         )
 
         self.pregunta_label.pack(
-            fill="both",
-            expand=True,
-            padx=40
-        )
+            fill="x",
+            padx=40,
+            pady=(10, 20)
+        )   
 
         # ------------------------------------------------------
         # BOTONES DE RESPUESTA
@@ -380,6 +392,43 @@ class InterfazAkinator:
         return boton
 
     # ==========================================================
+    # CARGAR IMAGEN DEL JUGADOR
+    # ==========================================================
+
+    def cargar_imagen_jugador(self, jugador):
+
+        carpeta_imagenes = (
+            Path(__file__).resolve().parent / "imagenes"
+        )
+
+        extensiones = [".jpg", ".jpeg", ".png"]
+
+        for extension in extensiones:
+
+            ruta_imagen = carpeta_imagenes / f"{jugador}{extension}"
+
+            if ruta_imagen.exists():
+
+                imagen = Image.open(ruta_imagen)
+
+                imagen.thumbnail((260, 260))
+
+                self.foto_resultado = ImageTk.PhotoImage(imagen)
+
+                self.imagen_resultado_label.config(
+                    image=self.foto_resultado
+                )
+
+                return
+
+        # Si no existe la imagen, dejamos el espacio vacío.
+        self.foto_resultado = None
+
+        self.imagen_resultado_label.config(
+            image=""
+        )
+
+    # ==========================================================
     # INICIAR PARTIDA
     # ==========================================================
 
@@ -496,12 +545,16 @@ class InterfazAkinator:
 
     def mostrar_resultado(self, datos):
 
+        print(">>> ESTOY EN mostrar_resultado()")
+        
         self.partida_activa = False
 
         jugador = datos.get(
             "jugador",
             "Desconocido"
         )
+
+        self.cargar_imagen_jugador(jugador)
 
         confianza = datos.get(
             "confianza",
@@ -580,15 +633,17 @@ class InterfazAkinator:
             self.resultado_frame.destroy()
 
         self.resultado_frame = tk.Frame(
-            self.root,
+            self.botones_frame.master,
             bg="#f4f6fb"
         )
 
         self.resultado_frame.pack(
             fill="x",
-            padx=30,
-            pady=(5, 15)
+            pady=(20, 10),
+            before=self.historial_frame
         )
+
+        self.botones_frame.pack_forget()
 
         self.boton_correcto = tk.Button(
             self.resultado_frame,
@@ -649,7 +704,7 @@ class InterfazAkinator:
         self.pregunta_label.config(
             text=(
                 "🎉 ¡Excelente!\n\n"
-                "¡Akinator acertó!\n\n"
+                "¡Ticonator acertó!\n\n"
                 "Gracias por jugar."
             )
         )
@@ -663,7 +718,7 @@ class InterfazAkinator:
         self.historial_label.config(
             text=(
                 "🎉 Resultado confirmado.\n\n"
-                "Akinator acertó el jugador."
+                "Ticonator acertó el jugador."
             )
         )
 
@@ -710,6 +765,12 @@ class InterfazAkinator:
 
             self.resultado_frame.destroy()
             del self.resultado_frame
+
+        self.botones_frame.pack(
+            fill="x",
+            pady=(20, 10),
+            before=self.historial_frame
+        )
 
         self.numero_pregunta = 0
         self.historial = []
@@ -894,7 +955,7 @@ def main():
 
     root = tk.Tk()
 
-    InterfazAkinator(root)
+    Interfaz(root)
 
     root.mainloop()
 
