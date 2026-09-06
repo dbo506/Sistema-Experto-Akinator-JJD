@@ -404,8 +404,8 @@
     'delantero
     #t #t #f #t #f #f
     #t #f #t
-    #t #t #t #f
-    #t #f #f)
+    #t #f #f #f
+    #t #t #f)
 
    ; 30. Óscar Ramírez
    (crear-jugador
