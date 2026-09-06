@@ -60,6 +60,13 @@ class InterfazAkinator:
         self.partida_activa = True
         self.explicacion_actual = ""
         self.foto_resultado = None
+        self.partidas_finalizadas = 0
+        self.aciertos = 0
+        self.fallos = 0
+        self.total_preguntas = 0
+        self.promedio_preguntas = 0.0
+        self.partida_registrada = False
+        self.prediccion_disponible = False
 
         self.crear_interfaz()
 
@@ -464,6 +471,10 @@ class InterfazAkinator:
 
                 self.mostrar_resultado(respuesta)
 
+            elif respuesta.get("tipo") == "sin_certeza":
+
+                self.mostrar_sin_certeza(respuesta)
+
             else:
 
                 self.mostrar_error(respuesta)
@@ -561,6 +572,7 @@ class InterfazAkinator:
         print(">>> ESTOY EN mostrar_resultado()")
         
         self.partida_activa = False
+        self.prediccion_disponible = True
 
         jugador = datos.get(
             "jugador",
@@ -633,6 +645,38 @@ class InterfazAkinator:
     # ==========================================================
     # BOTONES DEL RESULTADO
     # ==========================================================
+
+    def mostrar_sin_certeza(self, datos):
+        self.partida_activa = False
+        self.prediccion_disponible = False
+        self.foto_resultado = None
+        self.imagen_resultado_label.config(image="")
+        self.deshabilitar_botones()
+        self.contador_label.config(text=f"Preguntas realizadas: {self.numero_pregunta}")
+        self.candidatos_label.config(text="Sin certeza suficiente")
+        self.pregunta_label.config(text=datos["mensaje"])
+        self.mostrar_botones_resultado()
+        self.boton_correcto.config(state="disabled")
+        self.boton_incorrecto.config(state="disabled")
+
+    def registrar_estadisticas(self, acierto):
+        if self.partida_registrada or not self.prediccion_disponible:
+            return False
+        self.partida_registrada = True
+        self.partidas_finalizadas += 1
+        self.aciertos += int(acierto)
+        self.fallos += int(not acierto)
+        self.total_preguntas += self.numero_pregunta
+        self.promedio_preguntas = self.total_preguntas / self.partidas_finalizadas
+        self.actualizar_historial()
+        return True
+
+    def texto_estadisticas(self):
+        return (
+            f"Partidas: {self.partidas_finalizadas} | Aciertos: {self.aciertos} | "
+            f"Fallos: {self.fallos} | Preguntas: {self.total_preguntas} | "
+            f"Promedio: {self.promedio_preguntas:.1f} preguntas"
+        )
 
     def mostrar_botones_resultado(self):
 
@@ -716,6 +760,9 @@ class InterfazAkinator:
 
     def prediccion_correcta(self):
 
+        if not self.registrar_estadisticas(True):
+            return
+
         self.partida_activa = False
 
         self.pregunta_label.config(
@@ -737,6 +784,9 @@ class InterfazAkinator:
     # ==========================================================
 
     def prediccion_incorrecta(self):
+
+        if not self.registrar_estadisticas(False):
+            return
 
         self.partida_activa = False
 
@@ -775,6 +825,8 @@ class InterfazAkinator:
             
         )
 
+        self.partida_registrada = False
+        self.prediccion_disponible = False
         self.numero_pregunta = 0
         self.historial = []
         self.pregunta_actual = None
@@ -804,10 +856,7 @@ class InterfazAkinator:
 
         self.progreso["value"] = 0
 
-        self.historial_label.config(
-            text="Todavía no hay respuestas.",
-            justify="left"
-        )
+        self.actualizar_historial()
 
         # ------------------------------------------------------
         # REINICIAR CONEXIÓN CON SCHEME
@@ -828,7 +877,9 @@ class InterfazAkinator:
         if not self.historial:
 
             self.historial_label.config(
-                text="Todavía no hay respuestas."
+                text=("Todavía no hay respuestas."
+                          + ("\n\n" + self.texto_estadisticas()
+                             if self.partidas_finalizadas else ""))
             )
 
             return
@@ -868,6 +919,9 @@ class InterfazAkinator:
                 "\n\U0001f4a1 \u00bfPor qu\u00e9 eleg\u00ed este jugador?\n\n"
                 f"{self.explicacion_actual}"
             )
+
+        if self.partidas_finalizadas:
+            textos.append("\n" + self.texto_estadisticas())
 
         self.historial_label.config(
             text="\n".join(textos),

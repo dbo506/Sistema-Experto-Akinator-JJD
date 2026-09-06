@@ -13,7 +13,14 @@
          confianza
          candidatos-activos-hechos
          siguiente-pregunta
-         explicacion)
+         explicacion
+         confianza-minima
+         diferencia-minima
+         resultado-final)
+
+;; Umbrales exclusivos de la decision final; no cambian las puntuaciones.
+(define confianza-minima 0.60)
+(define diferencia-minima 2.5)
 
 ;; 1. Inicialización y pre-cálculo
 ;; Expandimos los hechos de todos los candidatos con las reglas para
@@ -128,12 +135,29 @@
   ;; Condición de finalización:
   ;; Si el líder le saca una ventaja irremontable al segundo lugar (>= 2.5 puntos)
   ;; o si ya hemos hecho muchas preguntas (ej. 20), forzamos el resultado.
-  (if (or (>= (- mejor-score segundo-score) 2.5)
+  (if (or (>= (- mejor-score segundo-score) diferencia-minima)
           (>= (length respuestas) 20))
       #f
       (let ([activos-hechos (candidatos-activos-hechos puntuaciones)])
         (define preguntas-hechas (map car respuestas))
         (seleccionar-pregunta activos-hechos preguntas-hechas))))
+
+;; Solo identifica a alguien cuando la confianza y la separacion lo permiten.
+(define (resultado-final respuestas)
+  (define puntuaciones (ordenar-candidatos (puntuar-candidatos respuestas)))
+  (define mejor (first puntuaciones))
+  (define segundo-score (if (> (length puntuaciones) 1)
+                            (cdr (second puntuaciones)) -inf.0))
+  (define conf (confianza (cdr mejor) respuestas))
+  (if (and (>= conf confianza-minima)
+           (>= (- (cdr mejor) segundo-score) diferencia-minima))
+      (hash 'tipo "resultado"
+            'jugador (symbol->string (car mejor))
+            'confianza conf
+            'explicacion (explicacion (car mejor) respuestas))
+      (hash 'tipo "sin_certeza"
+            'confianza conf
+            'mensaje "No tengo suficiente información para identificar al futbolista.")))
 
 ;; Justifica la predicción
 (define (explicacion nombre-candidato respuestas)

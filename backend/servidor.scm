@@ -32,9 +32,7 @@
 (define (responder valor)
   (if (not pregunta-actual)
       (enviar
-       (hash
-        'tipo "resultado"
-        'mensaje "No hay más preguntas"))
+       (resultado-final respuestas))
 
       (let* ([nuevas-respuestas
               (cons (cons pregunta-actual valor) respuestas)]
@@ -69,13 +67,7 @@
               'pregunta (simbolo->string nueva-pregunta)
               'confianza conf))
 
-            (enviar
-             (hash
-              'tipo "resultado"
-              'jugador (simbolo->string nombre)
-              'confianza conf
-              'explicacion
-              (explicacion nombre nuevas-respuestas)))))))
+            (enviar (resultado-final nuevas-respuestas))))))
 
 ;; Procesa una línea recibida
 (define (procesar-linea linea)
